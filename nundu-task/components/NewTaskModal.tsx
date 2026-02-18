@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { apiPost } from "@/lib/apiMethods";
+import { sanitizeObject, isValidDate } from "@/lib/sanitizer";
 import { AlertCircle, CheckCircle, Loader } from "lucide-react";
 
 interface NewTaskModalProps {
@@ -25,10 +26,45 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
         setError(null);
         setSuccess(false);
 
+        // Validar y sanitizar entrada
+        const validationResult = sanitizeObject(
+            {
+                title,
+                description,
+                priority,
+            },
+            {
+                title: { type: 'string', maxLength: 200 },
+                description: { type: 'string', maxLength: 1000 },
+                priority: { type: 'string', maxLength: 20 },
+            }
+        );
+
+        if (!validationResult.success) {
+            setError(Object.values(validationResult.errors || {}).join(', '));
+            setLoading(false);
+            return;
+        }
+
+        // Validar fechas
+        if (startDate && !isValidDate(startDate)) {
+            setError("Start date is invalid");
+            setLoading(false);
+            return;
+        }
+
+        if (endDate && !isValidDate(endDate)) {
+            setError("End date is invalid");
+            setLoading(false);
+            return;
+        }
+
+        const sanitizedData = validationResult.data!;
+
         const newTask = {
-            title,
-            description,
-            priority: priority || "Medium",
+            title: sanitizedData.title,
+            description: sanitizedData.description,
+            priority: sanitizedData.priority || "Medium",
             assignedTo: assignedTo || "unassigned",
             sprint,
             state: "to-do",

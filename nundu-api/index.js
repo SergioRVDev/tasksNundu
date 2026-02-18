@@ -3,6 +3,11 @@ const cors = require('cors');
 const fs = require('fs/promises');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const {
+  sanitizeTaskInput,
+  sanitizeDeveloperInput,
+  sanitizeSprintInput,
+} = require('./middleware/sanitize');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -73,7 +78,7 @@ app.get('/tasks', async (req, res) => {
 });
 
 // POST /tasks - Create a new task
-app.post('/tasks', async (req, res) => {
+app.post('/tasks', sanitizeTaskInput, async (req, res) => {
   const newTask = req.body;
   const tasks = await getTasks();
 
@@ -105,7 +110,7 @@ app.get('/tasks/:id', async (req, res) => {
 });
 
 // PUT /tasks/:id - Update a task
-app.put('/tasks/:id', async (req, res) => {
+app.put('/tasks/:id', sanitizeTaskInput, async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const tasks = await getTasks();
@@ -146,7 +151,7 @@ app.get('/developers', async (req, res) => {
 });
 
 // POST /developers - Create a new developer
-app.post('/developers', async (req, res) => {
+app.post('/developers', sanitizeDeveloperInput, async (req, res) => {
   const newDeveloper = req.body;
   const developers = await getDevelopers();
 
@@ -176,7 +181,7 @@ app.get('/developers/:id', async (req, res) => {
 });
 
 // PUT /developers/:id - Update a developer
-app.put('/developers/:id', async (req, res) => {
+app.put('/developers/:id', sanitizeDeveloperInput, async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const developers = await getDevelopers();
@@ -217,7 +222,7 @@ app.get('/sprints', async (req, res) => {
 });
 
 // POST /sprints - Create a new sprint
-app.post('/sprints', async (req, res) => {
+app.post('/sprints', sanitizeSprintInput, async (req, res) => {
   const newSprint = req.body;
   const sprints = await getSprints();
 
@@ -248,7 +253,7 @@ app.get('/sprints/:id', async (req, res) => {
 });
 
 // PUT /sprints/:id - Update a sprint
-app.put('/sprints/:id', async (req, res) => {
+app.put('/sprints/:id', sanitizeSprintInput, async (req, res) => {
   const { id } = req.params;
   const updates = req.body;
   const sprints = await getSprints();
