@@ -1,7 +1,20 @@
-import { useState } from "react";
-import { apiPost } from "@/lib/apiMethods";
+import { useState, useEffect } from "react";
+import { apiPost, apiGet } from "@/lib/apiMethods";
 import { sanitizeObject, isValidDate } from "@/lib/sanitizer";
 import { AlertCircle, CheckCircle, Loader } from "lucide-react";
+
+interface Developer {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+}
+
+interface Sprint {
+    id: string;
+    name: string;
+    status?: string;
+}
 
 interface NewTaskModalProps {
     onClose: () => void;
@@ -20,6 +33,29 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
+    const [sprints, setSprints] = useState<Sprint[]>([]);
+    const [loadingData, setLoadingData] = useState(true);
+
+    // Cargar developers y sprints al montar el componente
+    useEffect(() => {
+        const fetchData = async () => {
+            const devResponse = await apiGet<Developer[]>("/developers");
+            const sprintResponse = await apiGet<Sprint[]>("/sprints");
+
+            if (devResponse.success && devResponse.data) {
+                setDevelopers(devResponse.data);
+            }
+
+            if (sprintResponse.success && sprintResponse.data) {
+                setSprints(sprintResponse.data);
+            }
+
+            setLoadingData(false);
+        };
+
+        fetchData();
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -69,7 +105,7 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
             description: sanitizedData.description,
             priority: sanitizedData.priority || "Medium",
             assignedTo: assignedTo || "unassigned",
-            sprint,
+            sprint: sprint || "Backlog",
             state: sanitizedData.state || "to-do",
             startDate: startDate || null,
             endDate: endDate || null,
@@ -100,7 +136,7 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
 
     return (
         <main className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] animate-in fade-in zoom-in duration-200">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[600px] animate-in fade-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold text-[#2E8BFF] mb-6">New Task</h2>
 
                 {error && (
@@ -153,11 +189,15 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
                                 id="assignedTo"
                                 value={assignedTo}
                                 onChange={(e) => setAssignedTo(e.target.value)}
-                                disabled={loading}
+                                disabled={loading || loadingData}
                                 className="cursor-pointer p-2 w-full rounded-md border border-gray-300 shadow-sm focus:border-[#2E8BFF] focus:ring-[#2E8BFF] focus:outline-none sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                                 <option value="">Unassigned</option>
-                                <option value="Juan Ramos">Juan Ramos</option>
+                                {developers.map((dev) => (
+                                    <option key={dev.id} value={dev.id}>
+                                        {dev.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                     </div>
@@ -173,8 +213,11 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
                                 className="cursor-pointer p-2 w-full rounded-md border border-gray-300 shadow-sm focus:border-[#2E8BFF] focus:ring-[#2E8BFF] focus:outline-none sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                             >
                                 <option value="Backlog">Backlog</option>
-                                <option value="Sprint 1">Sprint 1</option>
-                                <option value="Sprint 2">Sprint 2</option>
+                                {sprints.map((s) => (
+                                    <option key={s.id} value={s.name}>
+                                        {s.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
                         <div className="w-full flex flex-col gap-1">
