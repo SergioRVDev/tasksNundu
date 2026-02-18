@@ -14,6 +14,7 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
     const [priority, setPriority] = useState("");
     const [assignedTo, setAssignedTo] = useState("");
     const [sprint, setSprint] = useState("Backlog");
+    const [state, setState] = useState("to-do");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [loading, setLoading] = useState(false);
@@ -32,11 +33,13 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
                 title,
                 description,
                 priority,
+                state,
             },
             {
                 title: { type: 'string', maxLength: 200 },
                 description: { type: 'string', maxLength: 1000 },
                 priority: { type: 'string', maxLength: 20 },
+                state: { type: 'string', maxLength: 20 },
             }
         );
 
@@ -67,7 +70,7 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
             priority: sanitizedData.priority || "Medium",
             assignedTo: assignedTo || "unassigned",
             sprint,
-            state: "to-do",
+            state: sanitizedData.state || "to-do",
             startDate: startDate || null,
             endDate: endDate || null,
         };
@@ -82,6 +85,7 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
                 setPriority("");
                 setAssignedTo("");
                 setSprint("Backlog");
+                setState("to-do");
                 setStartDate("");
                 setEndDate("");
                 onSuccess?.(response.data);
@@ -158,19 +162,36 @@ export default function NewTaskModal({ onClose, onSuccess }: NewTaskModalProps) 
                         </div>
                     </div>
 
-                    <div className="mb-4 flex flex-col gap-1">
-                        <label htmlFor="sprint" className="block text-sm font-medium text-gray-700">Sprint</label>
-                        <select
-                            id="sprint"
-                            value={sprint}
-                            onChange={(e) => setSprint(e.target.value)}
-                            disabled={loading}
-                            className="cursor-pointer p-2 w-full rounded-md border border-gray-300 shadow-sm focus:border-[#2E8BFF] focus:ring-[#2E8BFF] focus:outline-none sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        >
-                            <option value="Backlog">Backlog</option>
-                            <option value="Sprint 1">Sprint 1</option>
-                            <option value="Sprint 2">Sprint 2</option>
-                        </select>
+                    <div className="mb-4 flex gap-4 w-full">
+                        <div className="w-full flex flex-col gap-1">
+                            <label htmlFor="sprint" className="block text-sm font-medium text-gray-700">Sprint</label>
+                            <select
+                                id="sprint"
+                                value={sprint}
+                                onChange={(e) => setSprint(e.target.value)}
+                                disabled={loading}
+                                className="cursor-pointer p-2 w-full rounded-md border border-gray-300 shadow-sm focus:border-[#2E8BFF] focus:ring-[#2E8BFF] focus:outline-none sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="Backlog">Backlog</option>
+                                <option value="Sprint 1">Sprint 1</option>
+                                <option value="Sprint 2">Sprint 2</option>
+                            </select>
+                        </div>
+                        <div className="w-full flex flex-col gap-1">
+                            <label htmlFor="state" className="block text-sm font-medium text-gray-700">State</label>
+                            <select
+                                id="state"
+                                value={state}
+                                onChange={(e) => setState(e.target.value)}
+                                disabled={loading}
+                                className="cursor-pointer p-2 w-full rounded-md border border-gray-300 shadow-sm focus:border-[#2E8BFF] focus:ring-[#2E8BFF] focus:outline-none sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                                <option value="to-do">To Do</option>
+                                <option value="in-progress">In Progress</option>
+                                <option value="to-validate">To Validate</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="mb-4 flex flex-col gap-1">

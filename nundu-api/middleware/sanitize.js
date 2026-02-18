@@ -65,29 +65,47 @@ function sanitizeObject(obj, schema) {
   for (const [key, fieldConfig] of Object.entries(schema)) {
     const value = obj[key];
     const maxLength = fieldConfig.maxLength || 500;
+    const isRequired = fieldConfig.required !== false; // default is required
+    const isEmpty = value === null || value === undefined || value === '';
+
+    // Si el campo está vacío y no es requerido, permitir null
+    if (isEmpty && !isRequired) {
+      sanitized[key] = null;
+      continue;
+    }
 
     if (fieldConfig.type === 'string') {
       const result = sanitizeString(value, maxLength);
       if (result === null) {
-        errors[key] = `${key} must be a valid string (max ${maxLength} characters)`;
+        if (isRequired) {
+          errors[key] = `${key} must be a valid string (max ${maxLength} characters)`;
+        } else {
+          sanitized[key] = null;
+        }
       } else {
         sanitized[key] = result;
       }
     } else if (fieldConfig.type === 'email') {
       if (typeof value !== 'string' || !isValidEmail(value)) {
-        errors[key] = `${key} must be a valid email`;
+        if (isRequired) {
+          errors[key] = `${key} must be a valid email`;
+        } else {
+          sanitized[key] = null;
+        }
       } else {
         sanitized[key] = value.toLowerCase();
       }
     } else if (fieldConfig.type === 'date') {
-      if (value !== null && value !== undefined && value !== '') {
-        if (!isValidDate(value)) {
+      if (isEmpty) {
+        sanitized[key] = null;
+      } else if (!isValidDate(value)) {
+        if (isRequired) {
           errors[key] = `${key} must be a valid date (ISO 8601)`;
         } else {
-          sanitized[key] = value;
+          sanitized[key] = null;
         }
       } else {
-        sanitized[key] = null;
+        sanitized[key] = value;
       }
     }
   }
@@ -108,14 +126,14 @@ function sanitizeTaskInput(req, res, next) {
   }
 
   const schema = {
-    title: { type: 'string', maxLength: 200 },
-    description: { type: 'string', maxLength: 1000 },
-    priority: { type: 'string', maxLength: 20 },
-    assignedTo: { type: 'string', maxLength: 100 },
-    sprint: { type: 'string', maxLength: 100 },
-    state: { type: 'string', maxLength: 50 },
-    startDate: { type: 'date' },
-    endDate: { type: 'date' },
+    title: { type: 'string', maxLength: 200, required: true },
+    description: { type: 'string', maxLength: 1000, required: false },
+    priority: { type: 'string', maxLength: 20, required: false },
+    assignedTo: { type: 'string', maxLength: 100, required: false },
+    sprint: { type: 'string', maxLength: 100, required: false },
+    state: { type: 'string', maxLength: 50, required: false },
+    startDate: { type: 'date', required: false },
+    endDate: { type: 'date', required: false },
   };
 
   const result = sanitizeObject(req.body, schema);
@@ -138,9 +156,9 @@ function sanitizeDeveloperInput(req, res, next) {
   }
 
   const schema = {
-    name: { type: 'string', maxLength: 100 },
-    email: { type: 'email' },
-    role: { type: 'string', maxLength: 100 },
+    name: { type: 'string', maxLength: 100, required: true },
+    email: { type: 'email', required: true },
+    role: { type: 'string', maxLength: 100, required: false },
   };
 
   const result = sanitizeObject(req.body, schema);
@@ -162,10 +180,10 @@ function sanitizeSprintInput(req, res, next) {
   }
 
   const schema = {
-    name: { type: 'string', maxLength: 100 },
-    startDate: { type: 'date' },
-    endDate: { type: 'date' },
-    status: { type: 'string', maxLength: 50 },
+    name: { type: 'string', maxLength: 100, required: true },
+    startDate: { type: 'date', required: false },
+    endDate: { type: 'date', required: false },
+    status: { type: 'string', maxLength: 50, required: false },
   };
 
   const result = sanitizeObject(req.body, schema);
