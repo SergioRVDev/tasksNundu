@@ -14,6 +14,8 @@ services:
       # Polling para detectar cambios en Windows/WSL
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=1000
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
     volumes:
       # Datos persistentes
       - ./nundu-api/data:/app/data
@@ -38,6 +40,8 @@ services:
       # Polling para detectar cambios en Windows/WSL
       - CHOKIDAR_USEPOLLING=true
       - CHOKIDAR_INTERVAL=1000
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=1000
     volumes:
       # Hot reload: sincroniza todo el código excepto node_modules
       - ./nundu-task:/app

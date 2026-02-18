@@ -2,6 +2,13 @@ import { useEffect, useState } from "react";
 import { Edit, Trash } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/apiMethods";
 
+interface Developer {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+}
+
 interface Task {
     id: string;
     title: string;
@@ -17,20 +24,34 @@ interface Task {
 
 export default function TableSection() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchTasks();
+        fetchData();
     }, []);
 
-    const fetchTasks = async () => {
+    const fetchData = async () => {
         setLoading(true);
-        const response = await apiGet<Task[]>("/tasks");
-        if (response.success && response.data) {
-            setTasks(response.data);
+        const tasksResponse = await apiGet<Task[]>("/tasks");
+        const devsResponse = await apiGet<Developer[]>("/developers");
+
+        if (tasksResponse.success && tasksResponse.data) {
+            setTasks(tasksResponse.data);
+        }
+        if (devsResponse.success && devsResponse.data) {
+            setDevelopers(devsResponse.data);
         }
         setLoading(false);
+    };
+
+    const getDeveloperName = (assignedTo: string | undefined): string => {
+        if (!assignedTo || assignedTo === "unassigned") {
+            return "Unassigned";
+        }
+        const dev = developers.find(d => d.id === assignedTo);
+        return dev ? dev.name : assignedTo;
     };
 
     const handleDelete = async (id: string) => {
@@ -98,7 +119,7 @@ export default function TableSection() {
                                         {task.priority}
                                     </td>
                                     <td className="p-4 border-b border-gray-100 align-middle text-gray-500">
-                                        {task.developer || task.assignedTo || "Unassigned"}
+                                        {getDeveloperName(task.assignedTo)}
                                     </td>
                                     <td className="p-4 border-b border-gray-100 align-middle text-gray-600">
                                         {task.sprint}

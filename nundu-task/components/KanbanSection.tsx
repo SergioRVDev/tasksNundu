@@ -166,7 +166,11 @@ export default function KanbanSection() {
                                                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] text-gray-400">Developer</span>
-                                                                    <span className="text-xs font-medium text-gray-600">{task.developer}</span>
+                                                                    <span className="text-xs font-medium text-gray-600">
+                                                                        {task.assignedTo && task.assignedTo !== "unassigned"
+                                                                            ? developers.find(d => d.id === task.assignedTo)?.name || "Unknown"
+                                                                            : "Unassigned"}
+                                                                    </span>
                                                                 </div>
                                                                 {task.endDate && task.endDate !== "-" && task.endDate !== null && (
                                                                     <div className="flex flex-col items-end">
