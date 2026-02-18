@@ -51,9 +51,14 @@ describe('FiltersSection', () => {
   it('renders all action buttons', () => {
     render(<FiltersSection view="table" setView={mockSetView} />);
 
-    expect(screen.getByText(/Developer/)).toBeInTheDocument();
-    expect(screen.getByText(/Sprint/)).toBeInTheDocument();
-    expect(screen.getByText(/Task/)).toBeInTheDocument();
+    const buttons = screen.getAllByRole('button');
+    const hasDeveloper = buttons.some(btn => btn.textContent?.includes('Developer'));
+    const hasSprint = buttons.some(btn => btn.textContent?.includes('Sprint'));
+    const hasTask = buttons.some(btn => btn.textContent?.includes('Task'));
+
+    expect(hasDeveloper).toBe(true);
+    expect(hasSprint).toBe(true);
+    expect(hasTask).toBe(true);
   });
 
   it('opens NewTaskModal when Task button is clicked', () => {
