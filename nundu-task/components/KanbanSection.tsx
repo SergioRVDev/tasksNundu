@@ -1,6 +1,21 @@
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { apiGet, apiPut } from "@/lib/apiMethods";
+import { apiGet, apiPut, apiDelete } from "@/lib/apiMethods";
+import { Edit, Trash2 } from "lucide-react";
+import EditTaskModal from "./EditTaskModal";
+
+interface Developer {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+}
+
+interface Sprint {
+    id: string;
+    name: string;
+    status?: string;
+}
 
 interface Task {
     id: string;
@@ -12,22 +27,36 @@ interface Task {
     endDate?: string;
     state: string;
     description?: string;
+    startDate?: string;
 }
 
 export default function KanbanSection() {
     const [tasks, setTasks] = useState<Task[]>([]);
+    const [developers, setDevelopers] = useState<Developer[]>([]);
+    const [sprints, setSprints] = useState<Sprint[]>([]);
     const [loading, setLoading] = useState(true);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
 
     useEffect(() => {
-        fetchTasks();
+        fetchData();
     }, []);
 
-    const fetchTasks = async () => {
+    const fetchData = async () => {
         setLoading(true);
-        const response = await apiGet<Task[]>("/tasks");
-        if (response.success && response.data) {
-            setTasks(response.data);
+        const tasksResponse = await apiGet<Task[]>("/tasks");
+        const devsResponse = await apiGet<Developer[]>("/developers");
+        const sprintsResponse = await apiGet<Sprint[]>("/sprints");
+
+        if (tasksResponse.success && tasksResponse.data) {
+            setTasks(tasksResponse.data);
         }
+        if (devsResponse.success && devsResponse.data) {
+            setDevelopers(devsResponse.data);
+        }
+        if (sprintsResponse.success && sprintsResponse.data) {
+            setSprints(sprintsResponse.data);
+        }
+
         setLoading(false);
     };
 
@@ -55,10 +84,29 @@ export default function KanbanSection() {
 
         if (!response.success) {
             console.error("Error updating task state:", response.error);
-            // Revert to original state on error
-            fetchTasks();
+            fetchData();
         }
     };
+
+    const handleDeleteTask = async (taskId: string, e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (!confirm("¿Estás seguro de que deseas eliminar esta tarea?")) return;
+
+        const response = await apiDelete(`/tasks/${taskId}`);
+        if (response.success) {
+            setTasks(tasks.filter((t) => t.id !== taskId));
+        } else {
+            alert("Error deleting task");
+        }
+    };
+
+    if (loading) {
+        return (
+            <main className="h-full w-full flex items-center justify-center">
+                <p className="text-gray-500">Loading...</p>
+            </main>
+        );
+    }
 
     return (
         <main className="h-full w-full flex flex-col gap-8">
@@ -86,12 +134,33 @@ export default function KanbanSection() {
                                                             ref={provided.innerRef}
                                                             {...provided.draggableProps}
                                                             {...provided.dragHandleProps}
-                                                            className="bg-white rounded-lg p-4 flex flex-col gap-2 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                                                            className="bg-white rounded-lg p-4 flex flex-col gap-2 shadow-sm border border-gray-100 hover:shadow-md transition-shadow group"
                                                             style={{ ...provided.draggableProps.style }}
                                                         >
-                                                            <div className="flex items-center justify-start gap-2">
-                                                                <p className="bg-[#DBEAFF] w-fit text-xs font-medium text-[#2E8BFF] px-2 py-1 rounded-md">{task.sprint}</p>
-                                                                <p className={`w-fit text-xs font-medium px-2 py-1 rounded-md ${task.priority === 'High' ? 'bg-[#FFD1DC] text-[#FF0000]' : 'bg-gray-100 text-gray-600'}`}>{task.priority}</p>
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center justify-start gap-2">
+                                                                    <p className="bg-[#DBEAFF] w-fit text-xs font-medium text-[#2E8BFF] px-2 py-1 rounded-md">{task.sprint}</p>
+                                                                    <p className={`w-fit text-xs font-medium px-2 py-1 rounded-md ${task.priority === 'High' ? 'bg-[#FFD1DC] text-[#FF0000]' : 'bg-gray-100 text-gray-600'}`}>{task.priority}</p>
+                                                                </div>
+                                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setEditingTask(task);
+                                                                        }}
+                                                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                                                        title="Edit task"
+                                                                    >
+                                                                        <Edit size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => handleDeleteTask(task.id, e)}
+                                                                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
+                                                                        title="Delete task"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                             <h2 className="text-sm font-bold text-gray-700 line-clamp-2">{task.title}</h2>
                                                             <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
@@ -99,9 +168,9 @@ export default function KanbanSection() {
                                                                     <span className="text-[10px] text-gray-400">Developer</span>
                                                                     <span className="text-xs font-medium text-gray-600">{task.developer}</span>
                                                                 </div>
-                                                                {task.endDate !== "-" && (
+                                                                {task.endDate && task.endDate !== "-" && task.endDate !== null && (
                                                                     <div className="flex flex-col items-end">
-                                                                        <span className="text-[10px] text-gray-400">Due</span>
+                                                                        <span className="text-[10px] text-gray-400">End Date</span>
                                                                         <span className="text-xs font-medium text-gray-600">{task.endDate}</span>
                                                                     </div>
                                                                 )}
@@ -119,6 +188,16 @@ export default function KanbanSection() {
                     })}
                 </section>
             </DragDropContext>
+
+            {editingTask && (
+                <EditTaskModal
+                    task={editingTask}
+                    onClose={() => setEditingTask(null)}
+                    onSuccess={() => fetchData()}
+                    developers={developers}
+                    sprints={sprints}
+                />
+            )}
         </main>
     );
 }
