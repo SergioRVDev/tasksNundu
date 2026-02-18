@@ -1,0 +1,14 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# NO copiar el código - será montado vía volumen
+
+EXPOSE 3000
+
+# Ejecuta en modo desarrollo con hot reload
+CMD ["npm", "run", "dev"]

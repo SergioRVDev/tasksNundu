@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./nundu-api
+      dockerfile: Dockerfile.dev
+    container_name: nundu-api
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      # Polling para detectar cambios en Windows/WSL
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+    volumes:
+      # Datos persistentes
+      - ./nundu-api/data:/app/data
+      # Hot reload: sincroniza todo el código excepto node_modules
+      - ./nundu-api:/app
+      - /app/node_modules
+    networks:
+      - nundu-network
+    # Reinicia automáticamente si falla
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./nundu-task
+      dockerfile: Dockerfile.dev
+    container_name: nundu-task
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:3001
+      - NODE_ENV=development
+      # Polling para detectar cambios en Windows/WSL
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=1000
+    volumes:
+      # Hot reload: sincroniza todo el código excepto node_modules
+      - ./nundu-task:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+    networks:
+      - nundu-network
+    # Reinicia automáticamente si falla
+    restart: unless-stopped
+
+networks:
+  nundu-network:
+    driver: bridge

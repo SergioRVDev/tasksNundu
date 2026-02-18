@@ -1,0 +1,6 @@
+{
+  "title": "Nueva Tarea",
+  "description": "Descripción de la tarea",
+  "priority": "High",
+  "state": "in-progress"
+}

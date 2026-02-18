@@ -52,20 +52,49 @@ El frontend estará disponible en `http://localhost:3000`
 
 ## Docker
 
-### Build y ejecutar con Docker Compose
+### Modo Producción (Recomendado para Deploy)
+
+Build y ejecutar con Docker Compose optimizado:
 
 ```bash
+# Build e inicia en producción (sin hot reload)
 docker-compose up --build
+
+# Solo inicia los contenedores (sin rebuild)
+docker-compose up
+
+# Detener servicios
+docker-compose down
 ```
 
 - API: `http://localhost:3001`
 - Frontend: `http://localhost:3000`
 
-### Detener servicios
+### Modo Desarrollo (Con Hot Reload)
+
+Para desarrollo con watch polling (detecta cambios automáticamente):
 
 ```bash
-docker-compose down
+# Inicia con hot reload habilitado
+docker-compose -f docker-compose.dev.yml up --build
+
+# Solo inicia (sin rebuild)
+docker-compose -f docker-compose.dev.yml up
+
+# Detener servicios
+docker-compose -f docker-compose.dev.yml down
 ```
+
+**Ventajas del modo desarrollo:**
+- ✅ Hot reload automático al cambiar archivos
+- ✅ Watch polling habilitado para Windows/WSL
+- ✅ Logs en tiempo real
+- ✅ Fácil debugging
+- ⚠️ Más lento, solo para desarrollo
+
+**Ambiente Variables Usadas:**
+- `CHOKIDAR_USEPOLLING=true` - Usa polling en lugar de watch nativo (necesario en Windows/WSL)
+- `CHOKIDAR_INTERVAL=1000` - Intervalo de polling en ms (1 segundo)
 
 ## API Endpoints
 

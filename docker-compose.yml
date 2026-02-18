@@ -1,5 +1,6 @@
 version: '3.8'
 
+# PRODUCCIÓN: Sin hot reload, compilado y optimizado
 services:
   api:
     build:
@@ -12,9 +13,11 @@ services:
       - NODE_ENV=production
       - PORT=3001
     volumes:
+      # Solo datos persistentes
       - ./nundu-api/data:/app/data
     networks:
       - nundu-network
+    restart: unless-stopped
 
   frontend:
     build:
@@ -24,12 +27,13 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://api:3001
       - NODE_ENV=production
     depends_on:
       - api
     networks:
       - nundu-network
+    restart: unless-stopped
 
 networks:
   nundu-network:
