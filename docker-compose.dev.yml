@@ -13,19 +13,22 @@ services:
       - PORT=3001
       # Polling para detectar cambios en Windows/WSL
       - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
+      - CHOKIDAR_INTERVAL=500
+      - CHOKIDAR_USEFSEVENTSPATH=false
       - WATCHPACK_POLLING=true
-      - WATCHPACK_POLLING_INTERVAL=1000
+      - WATCHPACK_POLLING_INTERVAL=500
     volumes:
       # Datos persistentes
       - ./nundu-api/data:/app/data
       # Hot reload: sincroniza todo el código excepto node_modules
-      - ./nundu-api:/app
+      - ./nundu-api:/app:cached
       - /app/node_modules
     networks:
       - nundu-network
     # Reinicia automáticamente si falla
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
   frontend:
     build:
@@ -39,12 +42,13 @@ services:
       - NODE_ENV=development
       # Polling para detectar cambios en Windows/WSL
       - CHOKIDAR_USEPOLLING=true
-      - CHOKIDAR_INTERVAL=1000
+      - CHOKIDAR_INTERVAL=500
+      - CHOKIDAR_USEFSEVENTSPATH=false
       - WATCHPACK_POLLING=true
-      - WATCHPACK_POLLING_INTERVAL=1000
+      - WATCHPACK_POLLING_INTERVAL=500
     volumes:
       # Hot reload: sincroniza todo el código excepto node_modules
-      - ./nundu-task:/app
+      - ./nundu-task:/app:cached
       - /app/node_modules
       - /app/.next
     depends_on:
@@ -53,6 +57,8 @@ services:
       - nundu-network
     # Reinicia automáticamente si falla
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 networks:
   nundu-network:
