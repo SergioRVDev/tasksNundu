@@ -1,30 +1,64 @@
 import { useEffect, useState } from "react";
 import { Edit, Trash } from "lucide-react";
+import { apiGet, apiDelete } from "@/lib/apiMethods";
+
+interface Task {
+    id: string;
+    title: string;
+    state: string;
+    priority: string;
+    developer?: string;
+    assignedTo?: string;
+    sprint: string;
+    startDate?: string;
+    endDate?: string;
+    description?: string;
+}
 
 export default function TableSection() {
-    const [tasks, setTasks] = useState([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("http://localhost:3001/tasks")
-            .then((res) => res.json())
-            .then((data) => setTasks(data))
-            .catch((err) => console.error("Error fetching tasks:", err));
+        fetchTasks();
     }, []);
+
+    const fetchTasks = async () => {
+        setLoading(true);
+        const response = await apiGet<Task[]>("/tasks");
+        if (response.success && response.data) {
+            setTasks(response.data);
+        }
+        setLoading(false);
+    };
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this task?")) return;
-        
-        try {
-            await fetch(`http://localhost:3001/tasks/${id}`, { method: "DELETE" });
-            setTasks(tasks.filter((task: any) => task.id !== id));
-        } catch (error) {
-            console.error("Error deleting task:", error);
+
+        setDeleting(id);
+        const response = await apiDelete(`/tasks/${id}`);
+
+        if (response.success) {
+            setTasks(tasks.filter((task) => task.id !== id));
+        } else {
+            console.error("Error deleting task:", response.error);
+            alert(`Error: ${response.error}`);
         }
+        setDeleting(null);
     };
+
+    if (loading) {
+        return (
+            <section className="h-full flex flex-col items-center justify-center bg-white shadow-sm p-3 px-8 rounded-lg">
+                <p className="text-gray-500">Loading tasks...</p>
+            </section>
+        );
+    }
 
     return (
         <section className="h-full flex flex-col bg-white shadow-sm p-3 px-8 rounded-lg overflow-hidden">
-            <div className="overflow-auto w-full h-full bg-[#FAFAFA]"> 
+            <div className="overflow-auto w-full h-full bg-[#FAFAFA]">
                 <table className="w-full text-left border-separate border-spacing-y-4">
                     <thead className="">
                         <tr className="text-gray-500 text-sm font-semibold ">
@@ -40,32 +74,58 @@ export default function TableSection() {
                         </tr>
                     </thead>
                     <tbody className="text-sm text-gray-700">
-                        {tasks.map((task: any) => (
-                            <tr key={task.id} className="bg-white hover:bg-gray-50 transition-colors group">
-                                <td className="p-4 border-b border-gray-100 pl-2 align-middle text-gray-500 font-medium">{task.id}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle font-medium text-gray-800">{task.title}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle">
-                                    <span className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 font-medium text-xs border border-gray-200 uppercase tracking-wide">
-                                        {task.state}
-                                    </span>
-                                </td>
-                                <td className="p-4 border-b border-gray-100 align-middle font-semibold text-green-600">{task.priority}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle text-gray-500">{task.developer}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle text-gray-600">{task.sprint}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle text-gray-400">{task.startDate}</td>
-                                <td className="p-4 border-b border-gray-100 align-middle text-gray-400">{task.endDate}</td>
-                                <td className="p-4 border-b border-gray-100">
-                                    <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button className="p-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors cursor-pointer">
-                                            <Edit size={16} />
-                                        </button>
-                                        <button onClick={() => handleDelete(task.id)} className="p-2 rounded-md bg-red-100 hover:bg-red-200 text-red-600 transition-colors cursor-pointer">
-                                            <Trash size={16} />
-                                        </button>
-                                    </div>
+                        {tasks.length === 0 ? (
+                            <tr>
+                                <td colSpan={9} className="p-4 text-center text-gray-400">
+                                    No tasks found
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            tasks.map((task) => (
+                                <tr key={task.id} className="bg-white hover:bg-gray-50 transition-colors group">
+                                    <td className="p-4 border-b border-gray-100 pl-2 align-middle text-gray-500 font-medium text-xs truncate max-w-[120px]">
+                                        {task.id.substring(0, 8)}...
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle font-medium text-gray-800">
+                                        {task.title}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle">
+                                        <span className="px-3 py-1 rounded-md bg-gray-100 text-gray-600 font-medium text-xs border border-gray-200 uppercase tracking-wide">
+                                            {task.state}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle font-semibold text-green-600">
+                                        {task.priority}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle text-gray-500">
+                                        {task.developer || task.assignedTo || "Unassigned"}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle text-gray-600">
+                                        {task.sprint}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle text-gray-400">
+                                        {task.startDate || "-"}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100 align-middle text-gray-400">
+                                        {task.endDate || "-"}
+                                    </td>
+                                    <td className="p-4 border-b border-gray-100">
+                                        <div className="flex items-center justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button className="p-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                                <Edit size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(task.id)}
+                                                disabled={deleting === task.id}
+                                                className="p-2 rounded-md bg-red-100 hover:bg-red-200 text-red-600 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                <Trash size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

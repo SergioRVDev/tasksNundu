@@ -1,15 +1,35 @@
 import { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { apiGet, apiPut } from "@/lib/apiMethods";
+
+interface Task {
+    id: string;
+    title: string;
+    sprint: string;
+    priority: string;
+    developer: string;
+    assignedTo?: string;
+    endDate?: string;
+    state: string;
+    description?: string;
+}
 
 export default function KanbanSection() {
-    const [tasks, setTasks] = useState([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch("http://localhost:3001/tasks")
-            .then((res) => res.json())
-            .then((data) => setTasks(data))
-            .catch((err) => console.error(err));
+        fetchTasks();
     }, []);
+
+    const fetchTasks = async () => {
+        setLoading(true);
+        const response = await apiGet<Task[]>("/tasks");
+        if (response.success && response.data) {
+            setTasks(response.data);
+        }
+        setLoading(false);
+    };
 
     const TASK_STATES = [
         { id: "to-do", name: "To Do", color: "bg-gray-100" },
@@ -26,20 +46,17 @@ export default function KanbanSection() {
         if (source.droppableId === destination.droppableId) return;
 
         // Optimistic update
-        const newTasks = tasks.map((t: any) => 
+        const newTasks = tasks.map((t) =>
             t.id === draggableId ? { ...t, state: destination.droppableId } : t
         );
         setTasks(newTasks);
 
-        try {
-            await fetch(`http://localhost:3001/tasks/${draggableId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ state: destination.droppableId }),
-            });
-        } catch (error) {
-            console.error("Error updating task state:", error);
-            // Revert changes if API fails (optional, but good practice)
+        const response = await apiPut(`/tasks/${draggableId}`, { state: destination.droppableId });
+
+        if (!response.success) {
+            console.error("Error updating task state:", response.error);
+            // Revert to original state on error
+            fetchTasks();
         }
     };
 
