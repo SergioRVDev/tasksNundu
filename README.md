@@ -36,17 +36,6 @@ tasksNundu/
 
 ## Inicio Rápido
 
-### ⚠️ Configuración Requerida
-
-Antes de iniciar, crea el archivo `.env.local` en `nundu-task/`:
-
-```bash
-# nundu-task/.env.local
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-**Este paso es obligatorio** o la aplicación no podrá conectar con la API.
-
 ### Con Docker (Recomendado)
 
 ```bash
@@ -58,7 +47,20 @@ docker-compose -f docker-compose.dev.yml up --build
 # API: http://localhost:3001
 ```
 
+Docker automáticamente configura todas las variables de ambiente necesarias.
+
 ### Sin Docker
+
+#### 1. Configurar Variable de Ambiente
+
+Crea el archivo `.env.local` en `nundu-task/`:
+
+```bash
+# nundu-task/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+#### 2. Ejecutar Servicios
 
 **Terminal 1 - API:**
 ```bash
@@ -72,7 +74,6 @@ npm start
 cd nundu-task
 npm install
 npm run dev
-# Requiere .env.local configurado
 ```
 
 ## Características Principales

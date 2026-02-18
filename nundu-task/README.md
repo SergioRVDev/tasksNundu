@@ -15,17 +15,6 @@ Interfaz de usuario que proporciona:
 
 ## Inicio Rápido
 
-### Variables de Entorno
-
-Primero, crea el archivo `.env.local` en el directorio `nundu-task/`:
-
-```bash
-# .env.local
-NEXT_PUBLIC_API_URL=http://localhost:3001
-```
-
-**⚠️ IMPORTANTE**: Sin este archivo, la aplicación no podrá conectar con la API.
-
 ### Con Docker
 
 ```bash
@@ -34,14 +23,29 @@ docker-compose -f docker-compose.dev.yml up --build
 # API disponible en: http://localhost:3001
 ```
 
+Docker automáticamente configura las variables de ambiente necesarias.
+
 ### Sin Docker
+
+#### 1. Crear Variable de Entorno
+
+Crea el archivo `.env.local` en este directorio:
+
+```bash
+# nundu-task/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+#### 2. Ejecutar
 
 ```bash
 npm install
 npm run dev
-# Requiere API ejecutándose en http://localhost:3001
-# Requiere .env.local con NEXT_PUBLIC_API_URL configurado
 ```
+
+**Requisitos**:
+- API ejecutándose en http://localhost:3001
+- Archivo `.env.local` con `NEXT_PUBLIC_API_URL` configurado
 
 ## Estructura
 
