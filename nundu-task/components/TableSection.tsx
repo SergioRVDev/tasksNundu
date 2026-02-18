@@ -34,7 +34,7 @@ export default function TableSection({ tasks, refreshTasks }: TableSectionProps)
 
     useEffect(() => {
         fetchDevelopers();
-    }, []);
+    }, [tasks]);
 
     const fetchDevelopers = async () => {
         setLoading(true);

@@ -44,7 +44,7 @@ export default function KanbanSection({ tasks, refreshTasks }: KanbanSectionProp
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [tasks]);
 
     const fetchData = async () => {
         setLoading(true);
