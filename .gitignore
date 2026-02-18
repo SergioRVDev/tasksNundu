@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+package-lock.json
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js
+.next/
+out/
+build/
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker volumes (optional - remove if you want to track data)
+nundu-api/data/*.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Misc
+.cache/
+.turbo/
