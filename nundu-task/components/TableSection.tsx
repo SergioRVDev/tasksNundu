@@ -22,24 +22,24 @@ interface Task {
     description?: string;
 }
 
-export default function TableSection() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+interface TableSectionProps {
+    tasks: Task[];
+    refreshTasks: () => Promise<void>;
+}
+
+export default function TableSection({ tasks, refreshTasks }: TableSectionProps) {
     const [developers, setDevelopers] = useState<Developer[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState<string | null>(null);
 
     useEffect(() => {
-        fetchData();
+        fetchDevelopers();
     }, []);
 
-    const fetchData = async () => {
+    const fetchDevelopers = async () => {
         setLoading(true);
-        const tasksResponse = await apiGet<Task[]>("/tasks");
         const devsResponse = await apiGet<Developer[]>("/developers");
 
-        if (tasksResponse.success && tasksResponse.data) {
-            setTasks(tasksResponse.data);
-        }
         if (devsResponse.success && devsResponse.data) {
             setDevelopers(devsResponse.data);
         }
@@ -61,7 +61,7 @@ export default function TableSection() {
         const response = await apiDelete(`/tasks/${id}`);
 
         if (response.success) {
-            setTasks(tasks.filter((task) => task.id !== id));
+            refreshTasks();
         } else {
             console.error("Error deleting task:", response.error);
             alert(`Error: ${response.error}`);

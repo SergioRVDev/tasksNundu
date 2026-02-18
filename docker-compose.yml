@@ -1,39 +1,64 @@
 version: '3.8'
 
-# PRODUCCIÓN: Sin hot reload, compilado y optimizado
 services:
   api:
     build:
       context: ./nundu-api
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: nundu-api
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3001
+      # Polling para detectar cambios en Windows/WSL
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=500
+      - CHOKIDAR_USEFSEVENTSPATH=false
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=500
     volumes:
-      # Solo datos persistentes
+      # Datos persistentes
       - ./nundu-api/data:/app/data
+      # Hot reload: sincroniza todo el código excepto node_modules
+      - ./nundu-api:/app:cached
+      - /app/node_modules
     networks:
       - nundu-network
+    # Reinicia automáticamente si falla
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
   frontend:
     build:
       context: ./nundu-task
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: nundu-task
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://api:3001
-      - NODE_ENV=production
+      - NODE_ENV=development
+      # Polling para detectar cambios en Windows/WSL
+      - CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_INTERVAL=500
+      - CHOKIDAR_USEFSEVENTSPATH=false
+      - WATCHPACK_POLLING=true
+      - WATCHPACK_POLLING_INTERVAL=500
+    volumes:
+      # Hot reload: sincroniza todo el código excepto node_modules
+      - ./nundu-task:/app:cached
+      - /app/node_modules
+      - /app/.next
     depends_on:
       - api
     networks:
       - nundu-network
+    # Reinicia automáticamente si falla
     restart: unless-stopped
+    stdin_open: true
+    tty: true
 
 networks:
   nundu-network:

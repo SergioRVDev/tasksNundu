@@ -22,7 +22,7 @@ interface Task {
     title: string;
     sprint: string;
     priority: string;
-    developer: string;
+    developer?: string;
     assignedTo?: string;
     endDate?: string;
     state: string;
@@ -30,8 +30,13 @@ interface Task {
     startDate?: string;
 }
 
-export default function KanbanSection() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+interface KanbanSectionProps {
+    tasks: Task[];
+    refreshTasks: () => Promise<void>;
+}
+
+export default function KanbanSection({ tasks, refreshTasks }: KanbanSectionProps) {
+    // const [tasks, setTasks] = useState<Task[]>([]); // Removed internal task state
     const [developers, setDevelopers] = useState<Developer[]>([]);
     const [sprints, setSprints] = useState<Sprint[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,13 +48,10 @@ export default function KanbanSection() {
 
     const fetchData = async () => {
         setLoading(true);
-        const tasksResponse = await apiGet<Task[]>("/tasks");
+        // TASKS are passed as props now
         const devsResponse = await apiGet<Developer[]>("/developers");
         const sprintsResponse = await apiGet<Sprint[]>("/sprints");
 
-        if (tasksResponse.success && tasksResponse.data) {
-            setTasks(tasksResponse.data);
-        }
         if (devsResponse.success && devsResponse.data) {
             setDevelopers(devsResponse.data);
         }
@@ -74,13 +76,16 @@ export default function KanbanSection() {
 
         if (source.droppableId === destination.droppableId) return;
 
-        // Optimistic update
-        const newTasks = tasks.map((t) =>
-            t.id === draggableId ? { ...t, state: destination.droppableId } : t
-        );
-        setTasks(newTasks);
-
+        // Optimistic update not easily possible without local state or prop function to update optimistic
+        // So we will just refresh
+        
         const response = await apiPut(`/tasks/${draggableId}`, { state: destination.droppableId });
+        
+        if (response.success) {
+            refreshTasks();
+        } else {
+            console.error("Error updating task state:", response.error);
+        }
 
         if (!response.success) {
             console.error("Error updating task state:", response.error);
@@ -94,7 +99,7 @@ export default function KanbanSection() {
 
         const response = await apiDelete(`/tasks/${taskId}`);
         if (response.success) {
-            setTasks(tasks.filter((t) => t.id !== taskId));
+            refreshTasks();
         } else {
             alert("Error deleting task");
         }
@@ -167,7 +172,7 @@ export default function KanbanSection() {
                                                                 <div className="flex flex-col">
                                                                     <span className="text-[10px] text-gray-400">Developer</span>
                                                                     <span className="text-xs font-medium text-gray-600">
-                                                                        {task.assignedTo && task.assignedTo !== "unassigned"
+                                                                        {task.assignedTo 
                                                                             ? developers.find(d => d.id === task.assignedTo)?.name || "Unknown"
                                                                             : "Unassigned"}
                                                                     </span>
