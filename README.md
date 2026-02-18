@@ -36,6 +36,17 @@ tasksNundu/
 
 ## Inicio Rápido
 
+### ⚠️ Configuración Requerida
+
+Antes de iniciar, crea el archivo `.env.local` en `nundu-task/`:
+
+```bash
+# nundu-task/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+**Este paso es obligatorio** o la aplicación no podrá conectar con la API.
+
 ### Con Docker (Recomendado)
 
 ```bash
@@ -61,6 +72,7 @@ npm start
 cd nundu-task
 npm install
 npm run dev
+# Requiere .env.local configurado
 ```
 
 ## Características Principales
@@ -175,6 +187,24 @@ DELETE /sprints/:id     # Eliminar
 5. Ejecutar tests: `npm test`
 
 ## Solución de Problemas
+
+### Frontend No Conecta con API (ERR_NAME_NOT_RESOLVED)
+
+**Problema**: `net::ERR_NAME_NOT_RESOLVED http://api:3001`
+
+**Solución**: Asegúrate de tener el archivo `.env.local` en `nundu-task/`:
+
+```bash
+# nundu-task/.env.local
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+Luego reinicia los contenedores:
+
+```bash
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml up --build
+```
 
 ### Recarga Automática No Funciona
 
