@@ -1,177 +1,227 @@
-# Nundu Task Management
+# Sistema de Gestión de Tareas
 
-API CRUD desacoplada + Frontend Next.js para gestión de tareas, developers y sprints usando JSON como almacenamiento.
+Aplicación completa para gestionar tareas con vistas Kanban y de tabla, permitiendo organizar el trabajo en sprints y asignar desarrolladores.
+
+## Descripción General
+
+El proyecto incluye:
+
+- **API**: Servidor backend con operaciones CRUD para tareas, desarrolladores y sprints
+- **Frontend**: Interfaz web moderna con dos vistas de visualización
+- **Tests**: Suite completa de pruebas unitarias (72 tests, 100% pasando)
+- **Seguridad**: Validación y sanitización de entrada
+- **Docker**: Soporte completo con recarga automática de cambios
 
 ## Estructura del Proyecto
 
 ```
-nundu-task/                 # Frontend Next.js
-├── components/
-├── app/
-├── public/
-├── Dockerfile
-└── package.json
-
-nundu-api/                  # Backend Node.js/Express
-├── data/                   # Almacenamiento JSON
-│   ├── tasks.json
-│   ├── developers.json
-│   └── sprints.json
-├── Dockerfile
-├── index.js
-└── package.json
-
-docker-compose.yml          # Orquestación de servicios
+tasksNundu/
+├── nundu-api/              # Backend API
+│   ├── index.js            # Endpoints y lógica del servidor
+│   ├── middleware/         # Validación de entrada
+│   ├── data/               # Almacenamiento JSON
+│   ├── __tests__/          # Tests (27 tests)
+│   └── Dockerfile.dev
+│
+├── nundu-task/             # Frontend
+│   ├── app/                # Páginas principales
+│   ├── components/         # Componentes
+│   ├── lib/                # Funciones auxiliares
+│   ├── __tests__/          # Tests (45 tests)
+│   └── Dockerfile.dev
+│
+├── docker-compose.dev.yml  # Desarrollo
+└── docker-compose.yml      # Producción
 ```
 
-## Instalación Local
+## Inicio Rápido
 
-### Requisitos
-- Node.js 18+
-- npm o yarn
+### Con Docker (Recomendado)
 
-### Setup del API
+```bash
+# Iniciar API y Frontend
+docker-compose -f docker-compose.dev.yml up --build
 
+# Acceso:
+# Frontend: http://localhost:3000
+# API: http://localhost:3001
+```
+
+### Sin Docker
+
+**Terminal 1 - API:**
 ```bash
 cd nundu-api
 npm install
 npm start
 ```
 
-El API estará disponible en `http://localhost:3001`
-
-### Setup del Frontend
-
+**Terminal 2 - Frontend:**
 ```bash
 cd nundu-task
 npm install
 npm run dev
 ```
 
-El frontend estará disponible en `http://localhost:3000`
+## Características Principales
 
-## Docker
+### Gestión de Tareas
+- Crear, editar y eliminar tareas
+- Asignar a desarrolladores
+- Organizar en sprints
+- Prioridades: Baja, Media, Alta
+- Estados: Por hacer, En progreso, Por validar, Hecho
+- Fechas de inicio y cierre
 
-### Modo Producción (Recomendado para Deploy)
+### Vistas de Visualización
+- **Kanban**: Columnas arrastrables por estado
+- **Tabla**: Listado completo de tareas
 
-Build y ejecutar con Docker Compose optimizado:
+### Gestión de Equipo
+- Crear y administrar desarrolladores
+- Información de contacto (nombre, email, rol)
+- Asignar tareas a desarrolladores
+
+### Sprints
+- Crear y gestionar sprints
+- Seguimiento de estado
+- Agrupar tareas por sprint
+
+## Tests
+
+### Ejecutar Tests
 
 ```bash
-# Build e inicia en producción (sin hot reload)
-docker-compose up --build
+# Frontend (45 tests)
+cd nundu-task
+npm test
 
-# Solo inicia los contenedores (sin rebuild)
-docker-compose up
+# API (27 tests)
+cd nundu-api
+npm test
 
-# Detener servicios
-docker-compose down
+# Modo continuo
+npm run test:watch
 ```
 
-- API: `http://localhost:3001`
-- Frontend: `http://localhost:3000`
+### Cobertura de Tests
 
-### Modo Desarrollo (Con Hot Reload)
+**Frontend**: 45/45 tests (100%)
+- Componentes (UI, interacciones)
+- Validación de entrada
 
-Para desarrollo con watch polling (detecta cambios automáticamente):
+**API**: 27/27 tests (100%)
+- CRUD de tareas, desarrolladores, sprints
+- Manejo de errores
 
-```bash
-# Inicia con hot reload habilitado
-docker-compose -f docker-compose.dev.yml up --build
+## Endpoints de la API
 
-# Solo inicia (sin rebuild)
-docker-compose -f docker-compose.dev.yml up
-
-# Detener servicios
-docker-compose -f docker-compose.dev.yml down
+### Tareas
+```
+GET    /tasks           # Obtener todas las tareas
+POST   /tasks           # Crear tarea
+PUT    /tasks/:id       # Actualizar tarea
+DELETE /tasks/:id       # Eliminar tarea
 ```
 
-**Ventajas del modo desarrollo:**
-- ✅ Hot reload automático al cambiar archivos
-- ✅ Watch polling habilitado para Windows/WSL
-- ✅ Logs en tiempo real
-- ✅ Fácil debugging
-- ⚠️ Más lento, solo para desarrollo
-
-**Ambiente Variables Usadas:**
-- `CHOKIDAR_USEPOLLING=true` - Usa polling en lugar de watch nativo (necesario en Windows/WSL)
-- `CHOKIDAR_INTERVAL=1000` - Intervalo de polling en ms (1 segundo)
-
-## API Endpoints
-
-### Tasks
-- `GET /tasks` - Obtener todas las tareas
-- `POST /tasks` - Crear nueva tarea
-- `GET /tasks/:id` - Obtener tarea específica
-- `PUT /tasks/:id` - Actualizar tarea
-- `DELETE /tasks/:id` - Eliminar tarea
-
-**Ejemplo POST:**
-```json
-{
-  "title": "Nueva Tarea",
-  "description": "Descripción",
-  "assignedTo": "developer-id",
-  "state": "to-do",
-  "sprint": "Sprint 1"
-}
+### Desarrolladores
 ```
-
-### Developers
-- `GET /developers` - Obtener todos los developers
-- `POST /developers` - Crear nuevo developer
-- `GET /developers/:id` - Obtener developer específico
-- `PUT /developers/:id` - Actualizar developer
-- `DELETE /developers/:id` - Eliminar developer
-
-**Ejemplo POST:**
-```json
-{
-  "name": "Juan Pérez",
-  "email": "juan@example.com",
-  "role": "Frontend Developer"
-}
+GET    /developers      # Obtener desarrolladores
+POST   /developers      # Crear desarrollador
+PUT    /developers/:id  # Actualizar
+DELETE /developers/:id  # Eliminar
 ```
 
 ### Sprints
-- `GET /sprints` - Obtener todos los sprints
-- `POST /sprints` - Crear nuevo sprint
-- `GET /sprints/:id` - Obtener sprint específico
-- `PUT /sprints/:id` - Actualizar sprint
-- `DELETE /sprints/:id` - Eliminar sprint
-
-**Ejemplo POST:**
-```json
-{
-  "name": "Sprint 1",
-  "startDate": "2024-02-18",
-  "endDate": "2024-03-03",
-  "status": "planning"
-}
+```
+GET    /sprints         # Obtener sprints
+POST   /sprints         # Crear sprint
+PUT    /sprints/:id     # Actualizar
+DELETE /sprints/:id     # Eliminar
 ```
 
-## Almacenamiento de Datos
+## Decisiones de Diseño
 
-Los datos se almacenan en archivos JSON en la carpeta `nundu-api/data/`:
-- `tasks.json` - Tareas
-- `developers.json` - Developers
-- `sprints.json` - Sprints
+### Almacenamiento en JSON
+- Sin dependencias de bases de datos
+- Fácil de inspeccionar y modificar
+- Datos en formato legible
+- Rápido para desarrollo
 
-En Docker, el volumen `./nundu-api/data:/app/data` persiste los datos entre reinicios.
+### Validación de Entrada
+- Validación en cliente: retroalimentación inmediata al usuario
+- Validación en servidor: seguridad contra ataques
+- Prevención de inyección de código
+- Sanitización de entrada
 
-## Desarrollo
+### Arquitectura Modular
+- Componentes reutilizables
+- Funciones genéricas de API
+- Fácil de extender
+- Separación de responsabilidades
 
-Para desarrollo local con hot-reload en el API:
+### Docker para Desarrollo
+- Recarga automática de código
+- Sincronización de archivos en tiempo real
+- Soporte para Windows/WSL
+- Reinicio automático en errores
+
+## Flujo de Desarrollo
+
+1. Iniciar Docker: `docker-compose -f docker-compose.dev.yml up --build`
+2. Editar archivos en el IDE
+3. Los cambios se detectan automáticamente
+4. Frontend y API se recargan automáticamente
+5. Ejecutar tests: `npm test`
+
+## Solución de Problemas
+
+### Recarga Automática No Funciona
 
 ```bash
-cd nundu-api
-npm install
-npm run dev
+docker-compose -f docker-compose.dev.yml down -v
+docker-compose -f docker-compose.dev.yml up --build
 ```
 
-Para el frontend:
+### Puerto en Uso
 
 ```bash
-cd nundu-task
-npm install
-npm run dev
+# Windows: Terminar proceso
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
 ```
+
+### Tests Fallando
+
+```bash
+# Limpiar caché
+npm test -- --clearCache
+
+# Test específico
+npm test -- NombreComponente
+```
+
+## Documentación Detallada
+
+- [Backend API](./nundu-api/README.md)
+- [Frontend](./nundu-task/README.md)
+
+## Características de Seguridad
+
+- Validación de tipos de datos
+- Límites de longitud en campos
+- Escape de caracteres HTML
+- Validación de email y URLs
+- Validación de fechas
+- Sanitización en servidor y cliente
+
+## Notas de Performance
+
+- Intervalo de polling: 500ms
+- Caché de volúmenes Docker habilitado
+- Componentes optimizados
+- Respuestas API validadas
+
+## Licencia
+
+Proyecto educativo y de demostración.
